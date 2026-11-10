@@ -373,13 +373,10 @@ a {
   position: sticky;
   top: 0;
   height: 100vh;
-  height: 100svh;
+  height: 100dvh; /* follows the phone browser bar */
   overflow: hidden;
   --mx: 0;
   --my: 0;
-}
-.journey-defs {
-  position: absolute;
 }
 .flv {
   position: absolute;
@@ -1022,8 +1019,15 @@ a {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
     align-items: start;
-    padding: 92px var(--gutter) 24px;
+    padding: 108px var(--gutter) 24px;
     gap: 0;
+  }
+  /* small screens: background bits stay as soft accents, never over the words */
+  .decor {
+    opacity: 0.45;
+  }
+  .bit {
+    scale: 0.7;
   }
   .flv-body {
     font-size: 1rem;

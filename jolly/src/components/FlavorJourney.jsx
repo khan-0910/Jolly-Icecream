@@ -106,7 +106,8 @@ function FlavorPanel({ flavor, index, panelRef, rimRef, onChilli, chilliRef, hea
         '--in': index === 0 ? 1 : 0,
         '--out': 0,
         zIndex: index,
-        clipPath: index === 0 ? undefined : `url(#drip-${index})`
+        // CSS path() clip: works the same in Chrome, Safari (iPhone) and Firefox
+        clipPath: index === 0 ? undefined : "path('M0 0 Z')"
       }}
       aria-label={flavor.name}
     >
@@ -185,7 +186,6 @@ export default function FlavorJourney({ reduced }) {
   const section = useRef(null);
   const stage = useRef(null);
   const panels = useRef([]);
-  const clips = useRef([]);
   const rims = useRef([]);
   const chilliRef = useRef(null);
   const [heat, setHeat] = useState(0);
@@ -217,9 +217,10 @@ export default function FlavorJourney({ reduced }) {
         local.forEach((p, i) => {
           if (i > 0) {
             const q = Math.round(easeInOut(p) * 1000) / 1000;
-            put(`p${i}`, q, () => {
+            // size is part of the key so a phone's browser bar resizing redraws the pour
+            put(`p${i}`, `${q}@${w}x${h}`, () => {
               const d = dripPath(w, h, q, DRIPS[i]);
-              clips.current[i]?.setAttribute('d', d);
+              panels.current[i].style.clipPath = `path('${d}')`;
               // the rim only traces the melting edge, not the panel border
               const rim = q >= 0.9999 ? 'M0 0' : d.replace(/^M0 0 H([\d.]+) V/, 'M$1 ').replace(/ Z$/, '');
               rims.current[i]?.setAttribute('d', rim);
@@ -278,6 +279,14 @@ export default function FlavorJourney({ reduced }) {
       });
       render(st.progress);
 
+      // Phone address bars grow and shrink the stage; keep the pour sized to it.
+      const ro = new ResizeObserver(() => {
+        w = stage.current.clientWidth;
+        h = stage.current.clientHeight;
+        render(lastProgress);
+      });
+      ro.observe(stage.current);
+
       // Pointer depth for the floating bits in each flavour's world
       const onMove = (e) => {
         const mx = (e.clientX / window.innerWidth) * 2 - 1;
@@ -285,7 +294,10 @@ export default function FlavorJourney({ reduced }) {
         gsap.to(stage.current, { '--mx': mx, '--my': my, duration: 0.8, ease: 'power3.out', overwrite: true });
       };
       window.addEventListener('pointermove', onMove);
-      return () => window.removeEventListener('pointermove', onMove);
+      return () => {
+        ro.disconnect();
+        window.removeEventListener('pointermove', onMove);
+      };
     },
     { scope: section, dependencies: [reduced] }
   );
@@ -373,18 +385,6 @@ export default function FlavorJourney({ reduced }) {
       aria-label="Our flavours"
     >
       <div ref={stage} className="journey-stage">
-        <svg className="journey-defs" aria-hidden="true" width="0" height="0">
-          <defs>
-            {FLAVORS.map((_, i) =>
-              i === 0 ? null : (
-                <clipPath id={`drip-${i}`} key={i} clipPathUnits="userSpaceOnUse">
-                  <path ref={(el) => (clips.current[i] = el)} d="M0 0 Z" />
-                </clipPath>
-              )
-            )}
-          </defs>
-        </svg>
-
         {FLAVORS.map((f, i) => (
           <FlavorPanel
             key={f.id}
