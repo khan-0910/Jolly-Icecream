@@ -5,7 +5,7 @@ const CITIES = [
     name: 'Bangalore',
     local: 'ಬೆಂಗಳೂರು',
     lang: 'kn',
-    line: 'Look for Jolly at shops and parlours across the city.'
+    line: 'Look for Jolly Ice creams at shops and parlours across the city.'
   },
   {
     id: 'salem',

@@ -51,7 +51,7 @@ export default function App() {
       </a>
       <nav className="nav" aria-label="Main">
         <a href="#top" className="nav-mark" onClick={jump('#top')}>
-          Jolly
+          Jolly Ice creams
         </a>
         <ul className="nav-links">
           {NAV.map(([href, label]) => (
@@ -83,10 +83,10 @@ export default function App() {
 
       <footer className="footer">
         <p className="footer-mark">
-          Jolly <span lang="kn">ಜಾಲಿ</span> <span lang="ta">ஜாலி</span>
+          Jolly <span className="nowrap">Ice creams</span> <span lang="kn">ಜಾಲಿ</span> <span lang="ta">ஜாலி</span>
         </p>
         <div className="footer-row">
-          <p>Jolly Ice Creams. Bangalore and Salem.</p>
+          <p>Jolly Ice creams. Bangalore and Salem.</p>
           <ul>
             {NAV.map(([href, label]) => (
               <li key={href}>
@@ -96,7 +96,7 @@ export default function App() {
               </li>
             ))}
           </ul>
-          <p>&copy; {new Date().getFullYear()} Jolly Ice Creams</p>
+          <p>&copy; {new Date().getFullYear()} Jolly Ice creams</p>
         </div>
       </footer>
     </>

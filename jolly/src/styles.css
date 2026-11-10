@@ -212,25 +212,40 @@ a {
   position: relative;
   display: inline-block; /* drips hang from the word itself, whatever its width */
 }
-.title-drips {
+/* Drips hang from the letters themselves. Baseline sits at 0.707em (line-height .82);
+   starting at 0.685em keeps the joint inside thin strokes like the bottom of the o. */
+.hero-title-wrap {
+  --drip: 1;
+}
+.hero-title .split-char {
+  position: relative;
+}
+.hero-title .split-char:nth-child(-n + 4)::after,
+.hero-title .split-char:nth-child(-n + 4)::before {
+  content: '';
   position: absolute;
-  left: 0;
-  width: 92%;
-  top: 70%;
-  height: 0.34em;
-  font-size: clamp(6rem, 21vw, 22rem);
-  overflow: visible;
+  top: 0.685em;
+  left: var(--dx);
+  width: 0.09em;
+  height: calc(var(--dl) * var(--drip));
+  border-radius: 0 0 0.045em 0.045em;
+  background: #e2476b;
+  transform: translateX(-50%);
   pointer-events: none;
+}
+.hero-title .split-char:nth-child(-n + 4)::before {
+  background: var(--berry);
+  transform: translate(calc(-50% + 0.035em), 0.045em);
   z-index: -1;
 }
-.title-drip {
-  fill: #e2476b;
-  filter: drop-shadow(0.03em 0.035em 0 var(--berry));
-}
+.hero-title .split-char:nth-child(1) { --dx: 40%; --dl: 0.2em; }
+.hero-title .split-char:nth-child(2) { --dx: 43%; --dl: 0.11em; }
+.hero-title .split-char:nth-child(3) { --dx: 33%; --dl: 0.28em; }
+.hero-title .split-char:nth-child(4) { --dx: 35%; --dl: 0.15em; }
 .hero-hand {
   position: absolute;
-  right: 0;
-  top: -9%;
+  right: 7%;
+  top: 4%;
   width: 46%;
   z-index: 2;
   color: var(--berry);
@@ -265,10 +280,18 @@ a {
   font-weight: 700;
   color: var(--berry);
   opacity: 0.55;
-  /* clears the drips hanging off the title */
-  margin-top: clamp(28px, 6vw, 84px);
+  margin-top: 0.3em;
   display: flex;
   gap: 0.8em;
+}
+/* second half of the name, sitting under the drips */
+.hero-brand-line {
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 6.4vw, 6.6rem);
+  line-height: 1;
+  color: var(--berry);
+  margin-top: clamp(24px, 5vw, 72px);
+  margin-left: 0.2em;
 }
 .hero-copy {
   grid-area: copy;
@@ -981,9 +1004,9 @@ a {
     aspect-ratio: 4 / 4.8;
   }
   .hero-hand {
-    left: 42%;
-    right: auto;
-    top: -9%;
+    left: auto;
+    right: 6%;
+    top: 3%;
     width: 52%;
   }
   .note {
@@ -1061,6 +1084,19 @@ a {
   .nav-links li:first-child {
     display: none;
   }
+  .nav {
+    padding: 8px 6px 8px 16px;
+  }
+  .nav-mark {
+    font-size: 1.15rem;
+  }
+  .nav-mark,
+  .nav-links a {
+    white-space: nowrap;
+  }
+  .nav-links a {
+    padding: 8px 9px;
+  }
   .flv-name {
     font-size: max(2.4rem, min(15vw, 4.6rem, calc(150cqi / var(--fit, 8))));
   }
@@ -1114,6 +1150,13 @@ a {
 }
 .intro-char {
   display: inline-block;
+}
+.intro-sub {
+  font-family: var(--display);
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1;
+  color: var(--berry);
+  margin: -0.1em 0 0.4em;
 }
 .intro-note {
   font-family: var(--hand);
@@ -1225,7 +1268,10 @@ a {
   .lineup-item {
     width: calc(var(--size) * 0.7);
   }
-  .title-drips {
-    font-size: clamp(6rem, 21vw, 22rem);
-  }
+}
+
+.footer-mark .nowrap {
+  font-size: 1em;
+  color: inherit;
+  white-space: nowrap;
 }

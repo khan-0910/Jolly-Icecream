@@ -26,8 +26,8 @@ export default function Hero({ reduced }) {
     (ctx, contextSafe) => {
       if (reduced) return;
       // Everything waits under the cream sheet, then plays as one entrance.
-      gsap.set(['.hero-arch', '.hero-copy > *', '.hero-scripts', '.hero-hand'], { autoAlpha: 0 });
-      gsap.set('.title-drip', { scaleY: 0, transformOrigin: '50% 0%' });
+      gsap.set(['.hero-arch', '.hero-copy > *', '.hero-brand-line', '.hero-scripts', '.hero-hand'], { autoAlpha: 0 });
+      gsap.set('.hero-title-wrap', { '--drip': 0 });
 
       let alive = true;
       introDone.then(
@@ -38,14 +38,14 @@ export default function Hero({ reduced }) {
             .fromTo('.hero-arch .scoop', { y: -460 }, { y: 0, duration: 0.85, ease: 'power3.in' }, 0.2)
             .to('.hero-arch .scoop', { scaleY: 0.84, scaleX: 1.1, transformOrigin: '50% 90%', duration: 0.12, ease: 'power1.out' })
             .to('.hero-arch .scoop', { scaleY: 1, scaleX: 1, duration: 1, ease: 'elastic.out(1, 0.3)' })
-            .to('.title-drip', { scaleY: 1, duration: 1.4, stagger: 0.18, ease: 'power2.out' }, 0.7)
-            .fromTo('.hero-scripts', { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.6 }, 0.9)
+            .to('.hero-title-wrap', { '--drip': 1, duration: 1.6, ease: 'power2.out' }, 0.7)
+            .fromTo(['.hero-brand-line', '.hero-scripts'], { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'back.out(1.6)' }, 0.85)
             .fromTo('.hero-copy > *', { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, stagger: 0.09, duration: 0.8, ease: 'power3.out' }, 0.8)
             .fromTo('.hero-hand', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, 1.4)
             .fromTo('.hero-hand path', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, stagger: 0.25, ease: 'power2.out' }, 1.4)
             .fromTo('.hero-hand-text', { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.9, ease: 'steps(18)' }, 1.5);
           // drips keep slowly stretching, like they're still melting
-          gsap.to('.title-drip', { scaleY: 1.25, duration: 2.6, ease: 'sine.inOut', yoyo: true, repeat: -1, stagger: 0.7, delay: 2.4 });
+          gsap.fromTo('.hero-title-wrap', { '--drip': 1 }, { '--drip': 1.3, duration: 2.6, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 2.4 });
         })
       );
 
@@ -117,22 +117,8 @@ export default function Hero({ reduced }) {
                 Jolly
               </h1>
             )}
-            <svg className="title-drips" viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true">
-              {[
-                [92, 34, 120],
-                [300, 22, 70],
-                [520, 30, 150],
-                [660, 18, 60],
-                [880, 26, 110]
-              ].map(([x, wdt, len], i) => (
-                <path
-                  key={i}
-                  className="title-drip"
-                  d={`M${x - wdt} 0 C${x - wdt * 0.5} 0 ${x - wdt * 0.55} ${len * 0.5} ${x - wdt * 0.55} ${len} C${x - wdt * 0.55} ${len + wdt} ${x + wdt * 0.55} ${len + wdt} ${x + wdt * 0.55} ${len} C${x + wdt * 0.55} ${len * 0.5} ${x + wdt * 0.5} 0 ${x + wdt} 0 Z`}
-                />
-              ))}
-            </svg>
           </div>
+          <p className="hero-brand-line">Ice creams</p>
           <p className="hero-scripts" lang="kn">
             ಜಾಲಿ <span lang="ta">ஜாலி</span>
           </p>
@@ -164,7 +150,7 @@ export default function Hero({ reduced }) {
                 scrollToTarget('#find-us');
               }}
             >
-              Find Jolly near you
+              Find Jolly Ice creams near you
             </a>
           </div>
         </div>

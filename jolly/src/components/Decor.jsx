@@ -92,7 +92,7 @@ const Chilli = () => (
 const WORLDS = {
   vanilla: [
     { C: Pod, x: 6, y: 8, s: 9, d: 1.4, r: 18 },
-    { C: Pod, x: 72, y: 88, s: 7, d: 0.8, r: -64 },
+    { C: Pod, x: 34, y: 97, s: 6, d: 0.8, r: 82 },
     { C: Drop, x: 46, y: 6, s: 5, d: 2 },
     { C: Drop, x: 92, y: 14, s: 3.5, d: 1.2 },
     { C: Drop, x: 14, y: 78, s: 6, d: 0.6 },

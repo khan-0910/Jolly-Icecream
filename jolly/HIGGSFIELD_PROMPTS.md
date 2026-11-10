@@ -1,4 +1,4 @@
-# Higgsfield asset prompts for Jolly
+# Higgsfield asset prompts for Jolly Ice creams
 
 Run these once the Higgsfield workspace has credits (about 94 credits for the full set),
 save the results into `public/assets/`, and point to them in `src/config.js`.

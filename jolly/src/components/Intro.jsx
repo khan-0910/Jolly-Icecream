@@ -38,7 +38,7 @@ export default function Intro({ reduced }) {
       }
     });
     tl.fromTo('.intro-char', { yPercent: 120, rotate: 12 }, { yPercent: 0, rotate: 0, duration: 0.7, stagger: 0.06, ease: 'back.out(2)' })
-      .fromTo('.intro-note', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, '-=0.3')
+      .fromTo(['.intro-sub', '.intro-note'], { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.12 }, '-=0.3')
       .to('.intro-word', { yPercent: -40, opacity: 0, duration: 0.5, ease: 'power2.in' }, '+=0.35')
       .add(() => resolveDone(), '-=0.1')
       .to(state, { p: 0, duration: 1.25, ease: 'power3.inOut', onUpdate: draw }, '-=0.15');
@@ -62,6 +62,7 @@ export default function Intro({ reduced }) {
             </span>
           ))}
         </p>
+        <p className="intro-sub">Ice creams</p>
         <p className="intro-note">scooping your page...</p>
       </div>
     </div>

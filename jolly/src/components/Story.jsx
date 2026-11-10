@@ -26,14 +26,14 @@ const NOTES = [
 function Stack() {
   const order = [...FLAVORS].reverse();
   return (
-    <svg className="stack" viewBox="0 150 300 760" role="img" aria-label="A cone stacked with one scoop of every Jolly flavour">
+    <svg className="stack" viewBox="0 150 300 880" role="img" aria-label="A cone stacked with one scoop of every Jolly Ice creams flavour">
       <defs>
         <pattern id="waffle-stack" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
           <rect width="22" height="22" fill="#EDBB72" />
           <path d="M0 0 H22 M0 0 V22" stroke="#C98A3E" strokeWidth="4" />
         </pattern>
       </defs>
-      <path d="M62 690 L238 690 L158 890 Q150 906 142 890 Z" fill="url(#waffle-stack)" />
+      <path d="M66 752 L234 752 L158 1006 Q150 1024 142 1006 Z" fill="url(#waffle-stack)" />
       {order.map((f, i) => (
         <g key={f.id} className="stack-scoop" transform={`translate(${26 - (i % 2) * 6 + 3} ${640 - i * 104}) scale(.62)`}>
           <g transform="translate(0 -60)">
@@ -72,7 +72,7 @@ export default function Story({ reduced }) {
             Made for hot afternoons
           </h2>
           <p className="story-lede">
-            Jolly is ice cream the way it should be: cold, generous, and a little bit fun. Five flavours, each one with its own
+            Jolly Ice creams makes ice cream the way it should be: cold, generous, and a little bit fun. Five flavours, each one with its own
             personality.
           </p>
         </div>

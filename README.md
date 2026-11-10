@@ -1,6 +1,6 @@
-# Jolly Ice Creams
+# Jolly Ice creams
 
-Landing page for Jolly Ice Creams, now in Bangalore and Salem.
+Landing page for Jolly Ice creams, now in Bangalore and Salem.
 Live site: https://khan-0910.github.io/Jolly-Icecream/
 
 Built with React, Vite, GSAP, Lenis and React Bits. All art is hand-drawn SVG.
