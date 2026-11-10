@@ -361,6 +361,8 @@ a {
 .flv {
   position: absolute;
   inset: 0;
+  isolation: isolate;
+  contain: layout paint style;
   background: var(--bg);
   color: var(--ink);
   overflow: hidden;
@@ -382,6 +384,10 @@ a {
 .flv-text {
   max-width: 40rem;
   container-type: inline-size;
+  /* the outgoing words sink and fade as the next flavour pours over them */
+  opacity: calc(1 - var(--out) * 1.6);
+  transform: translateY(calc(var(--out) * 8vh));
+  will-change: transform, opacity;
 }
 .flv-count {
   font-family: var(--mono);
@@ -425,7 +431,6 @@ a {
   stroke-width: 14;
   stroke-opacity: 0.5;
   stroke-linejoin: round;
-  filter: blur(2px);
 }
 .flv-char {
   display: inline-block;
@@ -479,6 +484,7 @@ a {
   transform: translateY(calc((1 - var(--in-e)) * 30vh + var(--out) * 14vh)) scaleY(calc(1 - var(--out) * 0.14))
     scaleX(calc(1 + var(--out) * 0.08));
   transform-origin: 50% 100%;
+  will-change: transform;
 }
 .note {
   position: absolute;
@@ -518,6 +524,7 @@ a {
   stroke-dashoffset: calc(1 - var(--draw));
 }
 .flv-art-float {
+  will-change: transform;
   width: min(100%, 440px);
   animation: bob 6s ease-in-out infinite;
 }
@@ -828,7 +835,7 @@ a {
 
 /* ---------- Cities ---------- */
 .cities {
-  padding: clamp(40px, 6vw, 80px) var(--gutter) clamp(70px, 10vw, 140px);
+  padding: clamp(40px, 6vw, 80px) var(--gutter) clamp(110px, 12vw, 170px);
   background: var(--rose-milk);
 }
 .cities-title {

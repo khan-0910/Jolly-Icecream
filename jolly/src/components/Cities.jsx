@@ -1,5 +1,3 @@
-import Magnet from './bits/Magnet.jsx';
-import { CONTACT_URL } from '../config.js';
 
 const CITIES = [
   {
@@ -37,13 +35,6 @@ export default function Cities() {
             </svg>
           </article>
         ))}
-      </div>
-      <div className="cities-cta">
-        <Magnet padding={70} magnetStrength={3}>
-          <a href={CONTACT_URL} className="btn btn--solid btn--big">
-            Ask where to buy
-          </a>
-        </Magnet>
       </div>
     </section>
   );

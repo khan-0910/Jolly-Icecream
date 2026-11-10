@@ -13,6 +13,7 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 const N = FLAVORS.length;
 const HOLD = 0.38; // share of each step spent resting on a flavour before the next one pours in
 const TAIL = 0.55; // extra rest on the final flavour
+const LEAD = 0.45; // rest on vanilla before the first pour, so it gets its own moment
 
 function seeded(seed) {
   let a = seed;
@@ -64,6 +65,30 @@ export function dripPath(w, h, p, drips) {
 const clamp = (v) => Math.min(1, Math.max(0, v));
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
+// The side menu keeps its own state, so changing flavour never re-renders the panels.
+function Rail({ setRef, onPick }) {
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    setRef.current = setActive;
+  }, [setRef]);
+  return (
+    <nav className="rail" aria-label="Jump to a flavour" style={{ '--rail-ink': FLAVORS[active].ink }}>
+      {FLAVORS.map((f, i) => (
+        <button
+          key={f.id}
+          type="button"
+          className={`rail-item ${i === active ? 'is-active' : ''}`}
+          aria-current={i === active ? 'true' : undefined}
+          onClick={() => onPick(i)}
+        >
+          <span className="rail-dot" style={{ background: f.scoop }} />
+          <span className="rail-label">{f.name}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
 const HEAT = ['Add a pinch of chilli', 'A little more', 'Go on, more', 'You were warned'];
 
 function FlavorPanel({ flavor, index, panelRef, rimRef, onChilli, chilliRef, heat }) {
@@ -80,6 +105,7 @@ function FlavorPanel({ flavor, index, panelRef, rimRef, onChilli, chilliRef, hea
         '--soft': flavor.soft,
         '--in': index === 0 ? 1 : 0,
         '--out': 0,
+        zIndex: index,
         clipPath: index === 0 ? undefined : `url(#drip-${index})`
       }}
       aria-label={flavor.name}
@@ -162,9 +188,10 @@ export default function FlavorJourney({ reduced }) {
   const clips = useRef([]);
   const rims = useRef([]);
   const chilliRef = useRef(null);
-  const [active, setActive] = useState(0);
   const [heat, setHeat] = useState(0);
+  const resetChilliRef = useRef(null);
   const activeRef = useRef(0);
+  const railSet = useRef(null);
 
   useGSAP(
     () => {
@@ -172,31 +199,70 @@ export default function FlavorJourney({ reduced }) {
       let w = window.innerWidth;
       let h = window.innerHeight;
 
+      // Only touch the DOM when a value actually changes: most panels sit still on most frames.
+      const last = {};
+      const put = (key, value, apply) => {
+        if (last[key] === value) return;
+        last[key] = value;
+        apply(value);
+      };
+      let enter0 = 0; // vanilla's own entrance as the section scrolls up into view
+      let lastProgress = 0;
+
       const render = (progress) => {
-        const t = progress * (N - 1 + TAIL);
+        lastProgress = progress;
+        const t = progress * (N - 1 + TAIL + LEAD) - LEAD;
         let current = 0;
         const local = FLAVORS.map((_, i) => (i === 0 ? 1 : clamp((t - (i - 1) - HOLD) / (1 - HOLD))));
         local.forEach((p, i) => {
           if (i > 0) {
-            const d = dripPath(w, h, easeInOut(p), DRIPS[i]);
-            clips.current[i]?.setAttribute('d', d);
-            // the rim only traces the melting edge, not the panel border
-            const rim = p >= 0.9999 ? 'M0 0' : d.replace(/^M0 0 H([\d.]+) V/, 'M$1 ').replace(/ Z$/, '');
-            rims.current[i]?.setAttribute('d', rim);
+            const q = Math.round(easeInOut(p) * 1000) / 1000;
+            put(`p${i}`, q, () => {
+              const d = dripPath(w, h, q, DRIPS[i]);
+              clips.current[i]?.setAttribute('d', d);
+              // the rim only traces the melting edge, not the panel border
+              const rim = q >= 0.9999 ? 'M0 0' : d.replace(/^M0 0 H([\d.]+) V/, 'M$1 ').replace(/ Z$/, '');
+              rims.current[i]?.setAttribute('d', rim);
+            });
             if (p > 0.55) current = i;
           }
           const el = panels.current[i];
           if (!el) return;
-          // --in: how far this flavour has arrived; --out: how far the next one has covered it
-          el.style.setProperty('--in', i === 0 ? 1 : clamp((p - 0.25) / 0.75).toFixed(3));
-          el.style.setProperty('--out', (local[i + 1] ?? 0).toFixed(3));
-          el.style.visibility = p > 0 && (local[i + 1] ?? 0) < 1 ? 'visible' : 'hidden';
+          const next = local[i + 1] ?? 0;
+          // --in: how far this flavour has arrived. It waits until the pour has passed the words,
+          // so the old and new names never sit on top of each other.
+          // --out: how far the next flavour has covered this one.
+          const vIn = i === 0 ? enter0 : clamp((p - 0.45) / 0.55);
+          put(`in${i}`, vIn.toFixed(3), (v) => el.style.setProperty('--in', v));
+          put(`out${i}`, next.toFixed(3), (v) => el.style.setProperty('--out', v));
+          const onScreen = p > 0 && next < 1;
+          // Neighbours stay ready to show; far-away panels skip style and paint work entirely.
+          const mode = onScreen ? 'on' : Math.abs(i - current) <= 1 ? 'near' : 'far';
+          put(`vis${i}`, mode, (m) => {
+            el.style.visibility = m === 'on' ? 'visible' : 'hidden';
+            el.style.setProperty('content-visibility', m === 'far' ? 'hidden' : 'visible');
+          });
+        });
+        const guavaShown = local[N - 1] > 0.02;
+        put('guavaShown', guavaShown, (shown) => {
+          if (!shown) resetChilliRef.current?.();
         });
         if (current !== activeRef.current) {
           activeRef.current = current;
-          setActive(current);
+          railSet.current?.(current);
         }
       };
+
+      ScrollTrigger.create({
+        trigger: section.current,
+        start: 'top 85%',
+        end: 'top top',
+        scrub: true,
+        onUpdate: (self) => {
+          enter0 = self.progress;
+          render(lastProgress);
+        }
+      });
 
       const st = ScrollTrigger.create({
         trigger: section.current,
@@ -229,7 +295,7 @@ export default function FlavorJourney({ reduced }) {
     const top = el.getBoundingClientRect().top + window.scrollY;
     const total = el.offsetHeight - window.innerHeight;
     const t = i === 0 ? 0 : i - 1 + HOLD + (1 - HOLD) + 0.02;
-    scrollToY(top + (t / (N - 1 + TAIL)) * total);
+    scrollToY(top + ((t + LEAD) / (N - 1 + TAIL + LEAD)) * total);
   };
 
   // Other sections (the scoop line-up) can ask to jump to a flavour.
@@ -243,6 +309,16 @@ export default function FlavorJourney({ reduced }) {
     window.addEventListener('jolly:goto', onGoto);
     return () => window.removeEventListener('jolly:goto', onGoto);
   });
+
+  // Clear every flake and the warm glow, and put the button back to its first label.
+  resetChilliRef.current = () => {
+    const g = chilliRef.current;
+    if (g) {
+      gsap.killTweensOf(g.childNodes);
+      while (g.firstChild) g.removeChild(g.firstChild);
+    }
+    setHeat(0);
+  };
 
   const addChilli = () => {
     const g = chilliRef.current;
@@ -280,7 +356,7 @@ export default function FlavorJourney({ reduced }) {
         { y: 0, rotate: Math.random() * 360, opacity: 1, duration: 0.7 + Math.random() * 0.5, ease: 'power2.in', delay: Math.random() * 0.35 }
       );
     }
-    while (g.childNodes.length > 160) g.removeChild(g.childNodes[1]);
+    while (g.childNodes.length > 160) g.removeChild(g.childNodes[1]); // keep the glow (first child)
     const art = panels.current[N - 1]?.querySelector('.flv-art-float');
     if (art) gsap.fromTo(art, { rotate: -4 }, { rotate: 0, duration: 1.1, ease: 'elastic.out(1, 0.3)' });
     const name = panels.current[N - 1]?.querySelector('.flv-name');
@@ -293,10 +369,10 @@ export default function FlavorJourney({ reduced }) {
       id="flavours"
       ref={section}
       className={`journey ${reduced ? 'journey--static' : ''}`}
-      style={{ '--steps': N - 1 + TAIL }}
+      style={{ '--steps': N - 1 + TAIL + LEAD }}
       aria-label="Our flavours"
     >
-      <div ref={stage} className="journey-stage" style={{ '--rail-ink': FLAVORS[active].ink }}>
+      <div ref={stage} className="journey-stage">
         <svg className="journey-defs" aria-hidden="true" width="0" height="0">
           <defs>
             {FLAVORS.map((_, i) =>
@@ -322,22 +398,7 @@ export default function FlavorJourney({ reduced }) {
           />
         ))}
 
-        {!reduced && (
-          <nav className="rail" aria-label="Jump to a flavour">
-            {FLAVORS.map((f, i) => (
-              <button
-                key={f.id}
-                type="button"
-                className={`rail-item ${i === active ? 'is-active' : ''}`}
-                aria-current={i === active ? 'true' : undefined}
-                onClick={() => goTo(i)}
-              >
-                <span className="rail-dot" style={{ background: f.scoop }} />
-                <span className="rail-label">{f.name}</span>
-              </button>
-            ))}
-          </nav>
-        )}
+        {!reduced && <Rail setRef={railSet} onPick={goTo} />}
       </div>
     </section>
   );
