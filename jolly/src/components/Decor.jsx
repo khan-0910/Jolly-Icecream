@@ -103,7 +103,7 @@ const WORLDS = {
     { C: Cookie, x: 88, y: 86, s: 12, d: 0.7, r: -20 },
     { C: Chunk, x: 50, y: 8, s: 6, d: 2.2, r: 40 },
     { C: Chunk, x: 92, y: 18, s: 5, d: 1.1, r: -60 },
-    { C: Chunk, x: 18, y: 80, s: 7, d: 1.9, r: 100 },
+    { C: Chunk, x: 5, y: 92, s: 7, d: 1.9, r: 100 },
     { C: Chunk, x: 60, y: 88, s: 4, d: 2.6, r: 10 }
   ],
   strawberry: [

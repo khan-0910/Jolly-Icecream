@@ -209,6 +209,57 @@ export default function FlavorJourney({ reduced }) {
       let enter0 = 0; // vanilla's own entrance as the section scrolls up into view
       let lastProgress = 0;
 
+      // The moving parts of each panel, found once. Styles are written straight onto these:
+      // a CSS variable on the panel would make the browser recheck every node inside it each frame.
+      const q = (el, sel) => el.querySelector(sel);
+      const parts = panels.current.map((el) => ({
+        text: q(el, '.flv-text'),
+        count: q(el, '.flv-count'),
+        rise: [
+          [q(el, '.flv-tag'), 40, 1],
+          [q(el, '.flv-body'), 60, 0.9],
+          [q(el, '.flv-pair'), 70, 1],
+          [q(el, '.chilli-btn'), 80, 1]
+        ].filter(([n]) => n),
+        chars: [...el.querySelectorAll('.flv-char')],
+        art: q(el, '.flv-art'),
+        notes: [...el.querySelectorAll('.note')].map((n) => ({
+          n,
+          text: q(n, '.note-text'),
+          paths: [...n.querySelectorAll('.note-arrow path')]
+        })),
+        ribbon: q(el, '.irish-ribbon'),
+        bits: [...el.querySelectorAll('.bit')],
+        spin: q(el, '.bit--spin .bit-inner')
+      }));
+
+      const applyPanel = (i, vIn, out) => {
+        const P = parts[i];
+        const e = vIn * vIn * (3 - 2 * vIn);
+        P.text.style.opacity = clamp(1 - out * 1.6);
+        P.text.style.transform = `translateY(${out * 0.08 * h}px)`;
+        P.count.style.opacity = 0.65 * e;
+        P.rise.forEach(([n, dist, op]) => {
+          n.style.transform = `translateY(${(1 - e) * dist}px)`;
+          n.style.opacity = e * op;
+        });
+        P.chars.forEach((c, ci) => {
+          const k = 1 - clamp(vIn * 1.6 - ci * 0.06);
+          c.style.transform = `translateY(${k * 0.9}em) rotate(${k * 10}deg)`;
+          c.style.opacity = clamp(vIn * 2.2 - ci * 0.08);
+        });
+        P.art.style.transform = `translateY(${(1 - e) * 0.3 * h + out * 0.14 * h}px) scale(${1 + out * 0.08}, ${1 - out * 0.14})`;
+        const draw = clamp(vIn * 2.2 - 1.1);
+        P.notes.forEach(({ n, text, paths }) => {
+          n.style.opacity = clamp(1 - out * 2);
+          text.style.clipPath = `inset(0 ${(1 - draw) * 100}% 0 0)`;
+          paths.forEach((p) => (p.style.strokeDashoffset = 1 - draw));
+        });
+        if (P.ribbon) P.ribbon.style.strokeDashoffset = (1 - e) * 520;
+        P.bits.forEach((b) => b.style.setProperty('--in-e', e));
+        if (P.spin) P.spin.style.transform = `rotate(${e * 140 - out * 90}deg)`;
+      };
+
       const render = (progress) => {
         lastProgress = progress;
         const t = progress * (N - 1 + TAIL + LEAD) - LEAD;
@@ -234,8 +285,7 @@ export default function FlavorJourney({ reduced }) {
           // so the old and new names never sit on top of each other.
           // --out: how far the next flavour has covered this one.
           const vIn = i === 0 ? enter0 : clamp((p - 0.45) / 0.55);
-          put(`in${i}`, vIn.toFixed(3), (v) => el.style.setProperty('--in', v));
-          put(`out${i}`, next.toFixed(3), (v) => el.style.setProperty('--out', v));
+          put(`st${i}`, `${vIn.toFixed(3)}|${next.toFixed(3)}|${h}`, () => applyPanel(i, vIn, next));
           const onScreen = p > 0 && next < 1;
           // Neighbours stay ready to show; far-away panels skip style and paint work entirely.
           const mode = onScreen ? 'on' : Math.abs(i - current) <= 1 ? 'near' : 'far';
@@ -265,19 +315,24 @@ export default function FlavorJourney({ reduced }) {
         }
       });
 
-      const st = ScrollTrigger.create({
-        trigger: section.current,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: true,
-        onUpdate: (self) => render(self.progress),
-        onRefresh: (self) => {
-          w = stage.current.clientWidth;
-          h = stage.current.clientHeight;
-          render(self.progress);
+      // The pour follows scroll with a short glide, so fast flicks ease through instead of jumping.
+      const glide = { p: 0 };
+      const tween = gsap.to(glide, {
+        p: 1,
+        ease: 'none',
+        onUpdate: () => render(glide.p),
+        scrollTrigger: {
+          trigger: section.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.45,
+          onRefresh: () => {
+            w = stage.current.clientWidth;
+            h = stage.current.clientHeight;
+          }
         }
       });
-      render(st.progress);
+      render(tween.scrollTrigger.progress);
 
       // Phone address bars grow and shrink the stage; keep the pour sized to it.
       const ro = new ResizeObserver(() => {
@@ -287,11 +342,12 @@ export default function FlavorJourney({ reduced }) {
       });
       ro.observe(stage.current);
 
-      // Pointer depth for the floating bits in each flavour's world
+      // Pointer depth for the floating bits in each flavour's world (only the decor layers, not whole panels)
+      const decors = panels.current.map((el) => q(el, '.decor'));
       const onMove = (e) => {
         const mx = (e.clientX / window.innerWidth) * 2 - 1;
         const my = (e.clientY / window.innerHeight) * 2 - 1;
-        gsap.to(stage.current, { '--mx': mx, '--my': my, duration: 0.8, ease: 'power3.out', overwrite: true });
+        gsap.to(decors, { '--mx': mx, '--my': my, duration: 0.8, ease: 'power3.out', overwrite: true });
       };
       window.addEventListener('pointermove', onMove);
       return () => {
