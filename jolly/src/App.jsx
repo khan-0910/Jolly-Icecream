@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
+import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Hero from './components/Hero.jsx';
-import FlavorJourney from './components/FlavorJourney.jsx';
+import Stage from './components/Stage.jsx';
+import Tower from './components/Tower.jsx';
 import Story from './components/Story.jsx';
 import Cities from './components/Cities.jsx';
-import Lineup from './components/Lineup.jsx';
-import Intro from './components/Intro.jsx';
-import ScrollVelocity from './components/bits/ScrollVelocity.jsx';
 import { startLenis, scrollToTarget } from './lenis.js';
+import { syncNav } from './nav.js';
 import 'lenis/dist/lenis.css';
+
+gsap.registerPlugin(ScrollTrigger);
 
 function useReducedMotion() {
   const query = '(prefers-reduced-motion: reduce)';
@@ -24,7 +25,8 @@ function useReducedMotion() {
 
 const NAV = [
   ['#flavours', 'Flavours'],
-  ['#story', 'Our story'],
+  ['#build', 'Build'],
+  ['#story', 'Story'],
   ['#find-us', 'Find us']
 ];
 
@@ -37,65 +39,59 @@ export default function App() {
   const reduced = useReducedMotion();
 
   useEffect(() => {
-    if (reduced) return;
-    const stop = startLenis();
+    const stop = reduced ? null : startLenis();
+    const st = ScrollTrigger.create({ start: 0, end: 'max', onUpdate: syncNav, onRefresh: syncNav });
     document.fonts?.ready.then(() => ScrollTrigger.refresh());
-    return stop;
+    return () => {
+      st.kill();
+      stop?.();
+    };
   }, [reduced]);
+
+  const links = NAV.map(([href, label]) => (
+    <li key={href}>
+      <a href={href} onClick={jump(href)}>
+        {label}
+      </a>
+    </li>
+  ));
 
   return (
     <>
-      <Intro reduced={reduced} />
-      <a className="skip" href="#flavours">
-        Skip to flavours
+      <a className="skip" href="#build" onClick={jump('#build')}>
+        Skip the flavours
       </a>
-      <nav className="nav" aria-label="Main">
-        <a href="#top" className="nav-mark" onClick={jump('#top')}>
-          Jolly Ice creams
+      <header className="nav">
+        <a href="#top" className="nav-mark" onClick={jump('#top')} aria-label="Jolly Ice creams, back to top">
+          Jolly
         </a>
-        <ul className="nav-links">
-          {NAV.map(([href, label]) => (
-            <li key={href}>
-              <a href={href} onClick={jump(href)}>
-                {label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+        <nav aria-label="Main">
+          <ul>{links}</ul>
+        </nav>
+      </header>
 
       <main>
-        <Hero reduced={reduced} />
-        <FlavorJourney reduced={reduced} />
-        <div className="ribbon" aria-hidden="true">
-          <ScrollVelocity
-            texts={['now scooping in Bangalore and Salem', 'Vanilla, cookies & cream, strawberry, Irish, guava']}
-            velocity={reduced ? 0 : 40}
-            numCopies={4}
-            className="ribbon-text"
-            separator={<span className="ribbon-dot" />}
-          />
-        </div>
-        <Lineup reduced={reduced} />
+        <Stage reduced={reduced} />
+        <Tower reduced={reduced} />
         <Story reduced={reduced} />
         <Cities />
       </main>
 
       <footer className="footer">
-        <p className="footer-mark">
-          Jolly <span className="nowrap">Ice creams</span> <span lang="kn">ಜಾಲಿ</span> <span lang="ta">ஜாலி</span>
+        <div className="footer-top">
+          <p className="footer-line">Back for another scoop?</p>
+          <button type="button" className="btn btn--ink" onClick={jump('#top')}>
+            Start from the top
+          </button>
+        </div>
+        <p className="footer-word" aria-hidden="true">
+          Jolly
         </p>
         <div className="footer-row">
-          <p>Jolly Ice creams. Bangalore and Salem.</p>
-          <ul>
-            {NAV.map(([href, label]) => (
-              <li key={href}>
-                <a href={href} onClick={jump(href)}>
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
+          <p>
+            <span lang="kn">ಜಾಲಿ</span> <span lang="ta">ஜாலி</span>
+          </p>
+          <ul>{links}</ul>
           <p>&copy; {new Date().getFullYear()} Jolly Ice creams</p>
         </div>
       </footer>

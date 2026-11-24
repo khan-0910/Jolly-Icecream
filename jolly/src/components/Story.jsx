@@ -2,92 +2,73 @@ import { useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
-import { SCOOP } from './Cone.jsx';
-import { FLAVORS } from '../flavors.js';
+import Drip from './Drip.jsx';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
+const LINES = ['Made', 'for hot', 'afternoons'];
 const NOTES = [
-  {
-    title: 'Flavour you can name',
-    body: 'Every scoop is built around one taste you would recognise with your eyes shut.'
-  },
-  {
-    title: 'Rooted at home',
-    body: 'Guava with chilli is the street-cart snack we all grew up on. Now it comes in a cone.'
-  },
-  {
-    title: 'Two cities to start',
-    body: 'We are scooping in Bangalore and Salem first. Tell us where you want us next.'
-  }
+  ['Flavour you can name', 'Every scoop is built around one taste you would recognise with your eyes shut.'],
+  ['Rooted at home', 'Guava with chilli is the street-cart snack we all grew up on. Now it comes in a cone.'],
+  ['Two cities to start', 'We are scooping in Bangalore and Salem first.']
 ];
 
-// All five flavours stacked on one cone, top to bottom in the order you just met them.
-function Stack() {
-  const order = [...FLAVORS].reverse();
-  return (
-    <svg className="stack" viewBox="0 150 300 880" role="img" aria-label="A cone stacked with one scoop of every Jolly Ice creams flavour">
-      <defs>
-        <pattern id="waffle-stack" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <rect width="22" height="22" fill="#EDBB72" />
-          <path d="M0 0 H22 M0 0 V22" stroke="#C98A3E" strokeWidth="4" />
-        </pattern>
-      </defs>
-      <path d="M66 752 L234 752 L158 1006 Q150 1024 142 1006 Z" fill="url(#waffle-stack)" />
-      {order.map((f, i) => (
-        <g key={f.id} className="stack-scoop" transform={`translate(${26 - (i % 2) * 6 + 3} ${640 - i * 104}) scale(.62)`}>
-          <g transform="translate(0 -60)">
-            <path d={SCOOP} fill={f.scoop} />
-            <path d={SCOOP} fill="none" stroke={f.scoopShade} strokeWidth="6" opacity=".6" />
-            <ellipse cx="150" cy="130" rx="30" ry="16" fill="#fff" opacity=".45" transform="rotate(-28 150 130)" />
-          </g>
-        </g>
-      ))}
-    </svg>
-  );
-}
+// Where each letter touches its baseline, in em from its left edge: drips hang from there.
+const FOOT = { M: 0.77, a: 0.157, d: 0.456, e: 0.267, f: 0.12, o: 0.277, r: 0.138, h: 0.122, t: 0.18, n: 0.127, s: 0.27 };
+// Only the last line has room for long drips.
+const dripFor = (n, c, last) => {
+  const w = 0.06 + ((n * 13) % 5) / 130;
+  return { left: `${FOOT[c] - w / 2}em`, width: `${w}em`, height: `${0.05 + (((n * 29) % 10) / 14) * (last ? 1 : 0.16)}em` };
+};
 
 export default function Story({ reduced }) {
   const root = useRef(null);
   useGSAP(
     () => {
       if (reduced) return;
-      gsap.from('.stack-scoop', {
-        y: -380,
-        opacity: 0,
-        stagger: 0.16,
-        duration: 0.9,
-        ease: 'bounce.out',
-        scrollTrigger: { trigger: '.stack', start: 'top 70%' }
-      });
+      gsap.fromTo(
+        '.melt-drip i',
+        { y: 0, yPercent: -100 },
+        { y: 0, yPercent: 0, ease: 'none', scrollTrigger: { trigger: '.melt', start: 'top 60%', end: 'bottom 5%', scrub: 0.6 } }
+      );
     },
     { scope: root, dependencies: [reduced] }
   );
-
+  let n = 0;
   return (
     <section ref={root} className="story" id="story" aria-labelledby="story-title">
-      <div className="story-grid">
-        <div className="story-head">
-          <h2 id="story-title" className="story-title">
-            Made for hot afternoons
-          </h2>
-          <p className="story-lede">
-            Jolly Ice creams makes ice cream the way it should be: cold, generous, and a little bit fun. Five flavours, each one with its own
-            personality.
-          </p>
-        </div>
-        <div className="story-stack">
-          <Stack />
-        </div>
-        <ul className="story-notes">
-          {NOTES.map((n) => (
-            <li key={n.title} className="story-note">
-              <h3>{n.title}</h3>
-              <p>{n.body}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <h2 id="story-title" className="melt" aria-label="Made for hot afternoons">
+        {LINES.map((line, row) => (
+          <span key={line} className="melt-line" aria-hidden="true">
+            {Array.from(line).map((c, i) =>
+              c === ' ' ? (
+                <span key={i} className="melt-gap" />
+              ) : (
+                <span key={i} className="melt-char">
+                  {c}
+                  <span className="melt-drip" style={dripFor(++n, c, row === LINES.length - 1)}>
+                    <svg viewBox="0 0 100 60" preserveAspectRatio="none">
+                      <path d="M0 0 C22 4 22 40 22 60 H78 C78 40 78 4 100 0 Z" fill="currentColor" />
+                    </svg>
+                    <span className="melt-run">
+                      <i />
+                    </span>
+                  </span>
+                </span>
+              )
+            )}
+          </span>
+        ))}
+      </h2>
+      <dl className="notes">
+        {NOTES.map(([t, b]) => (
+          <div key={t}>
+            <dt>{t}</dt>
+            <dd>{b}</dd>
+          </div>
+        ))}
+      </dl>
+      <Drip color="#FF9A2B" seed={7} />
     </section>
   );
 }

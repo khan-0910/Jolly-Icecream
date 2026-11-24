@@ -3,7 +3,7 @@
 Landing page for Jolly Ice creams, now in Bangalore and Salem.
 Live site: https://khan-0910.github.io/Jolly-Icecream/
 
-Built with React, Vite, GSAP, Lenis and React Bits. All art is hand-drawn SVG.
+Built with React, Vite, Three.js, GSAP and Lenis. Every cone, scoop and ingredient is modelled in code (`jolly/src/three`).
 
 ## Run it
 
@@ -18,4 +18,4 @@ Pushing to `main` rebuilds and redeploys the site through GitHub Actions.
 ## Optional generated images
 
 `jolly/scripts/generate-assets.mjs` can make photo cones through Gemini or kie.ai.
-Keys go in `jolly/.env.local` (never committed). Point `jolly/src/config.js` at the results.
+The current design does not use them. Keys go in `jolly/.env.local` (never committed).
